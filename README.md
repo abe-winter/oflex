@@ -15,7 +15,7 @@ These things wouldn't normally belong together and are only bound together by th
 * [x] flask blueprints for create-account and login pages
 * [x] and scrypt passwords
 * [ ] and twilio login
-* [ ] login-required decorator
+* [x] login-required decorator
 * [x] graphene / graphql middleware login-required
 * [ ] HSTS middleware
 * [x] postgres & redis initializer
