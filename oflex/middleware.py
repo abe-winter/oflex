@@ -1,4 +1,4 @@
-import flask
+import flask, json
 
 class GQLAuthMiddleware:
   "authorization middleware for graphql with graphene"

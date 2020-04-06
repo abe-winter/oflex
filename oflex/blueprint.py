@@ -18,11 +18,15 @@ def post_login():
     if row is None:
       # todo: flash
       return flask.redirect(flask.url_for('oflex.get_login'))
-  assert row.auth_method = 'email'
+  assert row.auth_method == 'email'
   if row.pass_hash.tobytes() != scrypt.hash(form['password'].encode(), row.pass_salt.tobytes()):
     # todo: flash
     return flask.redirect(flask.url_for('oflex.get_login'))
   sessionid = str(uuid.uuid4())
-  flask.current_app.redis.setex(f'session-{sessionid}', CONFIG['session_expiry'], json.dumps({'userid': str(row.userid)]}))
+  flask.current_app.redis.setex(
+    f'session-{sessionid}',
+    CONFIG['session_expiry'],
+    json.dumps({'userid': str(row.userid)})
+  )
   flask.session['sessionid'] = sessionid
   return flask.redirect(flask.url_for(CONFIG['login_home'])) # todo: home instead
