@@ -1,4 +1,4 @@
-import flask, uuid, json, scrypt, psycopg2.extras
+import flask, uuid, json, scrypt, psycopg2.extras, os
 from . import pool
 from .config import CONFIG
 
@@ -9,7 +9,7 @@ def get_login():
   return flask.render_template('login.htm')
 
 @APP.route('/login/email', methods=['POST'])
-def post_login():
+def post_login_email():
   "login with email"
   form = flask.request.form
   with pool.withcon() as con, con.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
@@ -30,3 +30,24 @@ def post_login():
   )
   flask.session['sessionid'] = sessionid
   return flask.redirect(flask.url_for(CONFIG['login_home'])) # todo: home instead
+
+@APP.route('/join')
+def get_join():
+  return flask.render_template('join.htm')
+
+@APP.route('/join/email', methods=['POST'])
+def post_join_email():
+  "create account with email / password"
+  form = flask.request.form
+  if not form['password']:
+    flask.abort(flask.Response("Blank password not allowed", status=400))
+  assert '@' in form['email'] and len(form['email']) < CONFIG['max_email']
+  pass_salt = os.urandom(64)
+  pass_hash = scrypt.hash(form['password'].encode(), pass_salt)
+  with pool.withcon() as con, con.cursor() as cur:
+    # todo: rate limiting
+    # todo: clearer error for duplicate email
+    cur.execute(CONFIG['create_user_email'], (form['username'], form['email'], pass_hash, pass_salt))
+    row = cur.fetchone()
+    row.userid
+  return flask.render_template('ok_create_pass.htm', email=form['email'])
