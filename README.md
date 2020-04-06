@@ -12,14 +12,14 @@ Will happily add docs if anyone else needs this, post a github issue to LMK.
 
 These things wouldn't normally belong together and are only bound together by the common themes of (1) me needing them every time (2) I haven't found a right-fit library to do any of them in flask (3) they're all difficult to integrate automatically without some schema / template / backend assumptions.
 
-* [ ] flask blueprints for create-account and login pages
-* [ ] and scrypt passwords
+* [x] flask blueprints for create-account and login pages
+* [x] and scrypt passwords
 * [ ] and twilio login
 * [ ] login-required decorator
-* [ ] graphene / graphql middleware login-required
+* [x] graphene / graphql middleware login-required
 * [ ] HSTS middleware
-* [ ] postgres & redis initializer
-* [ ] postgres connection pool context manager
+* [x] postgres & redis initializer
+* [x] postgres connection pool context manager
 * [ ] basic RBAC
 * [ ] werkzeug remote IP
 * [ ] in-memory and redis rate limiting
