@@ -10,7 +10,7 @@ Will happily add docs if anyone else needs this, post a github issue to LMK.
 
 ## Features
 
-These things wouldn't normally belong together and are only bound together by the common themes of (1) me needing them every time (2) not having found a right-fit library for any and (3) difficult to integrate automatically without some assumptions.
+These things wouldn't normally belong together and are only bound together by the common themes of (1) me needing them every time (2) I haven't found a right-fit library to do any of them in flask (3) they're all difficult to integrate automatically without some schema / template / backend assumptions.
 
 * [ ] flask blueprints for create-account and login pages
 * [ ] and scrypt passwords
@@ -24,6 +24,7 @@ These things wouldn't normally belong together and are only bound together by th
 * [ ] werkzeug remote IP
 * [ ] in-memory and redis rate limiting
 * [ ] email verification
+* [ ] invitations & preapproval lists
 
 ## What you should do to use this
 

@@ -21,7 +21,7 @@ def init():
   app = flask.current_app
   # todo: register postgres uuid
   app.pool = psycopg2.pool.ThreadedConnectionPool(0, CONFIG['maxconn'], os.environ[CONFIG['env_pg_cx']])
-  app.redis = redis.Redis(CONFIG['env_redis_cx'])
+  app.redis = redis.Redis(os.environ[CONFIG['env_redis_cx']])
   app.jinja_loader = jinja2.ChoiceLoader([
     app.jinja_loader,
     jinja2.FileSystemLoader([os.path.join(os.path.dirname(__file__), 'templates')]),

@@ -1,0 +1,13 @@
+{% extends "base.htm" %}
+{% block title %}login{% endblock %}
+{% block container %}
+<h2>Sign in</h2>
+<hr>
+<form method="post" action="{{url_for('oflex.blueprint.post_login_email')}}">
+  <label>Email <input type="email" class="form-control" placeholder="email" name="email" autofocus required></label>
+  <br>
+  <label>Password <input type="password" class="form-control" placeholder="password" name="password" required></label>
+  <br>
+  <button class="btn btn-primary">Sign in</button>
+</form>
+{% endblock container %}

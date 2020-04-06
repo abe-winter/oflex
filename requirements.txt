@@ -1,5 +1,0 @@
-# note: these aren't versioned so that caller can version
-flask
-psycopg2-binary
-pyyaml
-redis
