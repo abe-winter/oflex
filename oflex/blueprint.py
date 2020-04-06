@@ -27,11 +27,11 @@ def post_login_email():
     row = cur.fetchone()
     if row is None:
       # todo: flash
-      return flask.redirect(flask.url_for('oflex.get_login'))
+      return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
   assert row.auth_method == 'email'
   if row.pass_hash.tobytes() != scrypt.hash(form['password'].encode(), row.pass_salt.tobytes()):
     # todo: flash
-    return flask.redirect(flask.url_for('oflex.get_login'))
+    return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
   set_session(row.userid)
   return flask.redirect(flask.url_for(CONFIG['login_home']))
 
@@ -55,3 +55,8 @@ def post_join_email():
     row = cur.fetchone()
     set_session(row.userid)
   return flask.redirect(flask.url_for(CONFIG['login_home']))
+
+@APP.route('/logout', methods=['POST'])
+def post_logout():
+  flask.session.clear()
+  return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
