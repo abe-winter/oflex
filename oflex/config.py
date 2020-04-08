@@ -57,4 +57,4 @@ def render_config():
 
 def getenv(name):
   "get env var with indirection"
-  return os.environ(CONFIG['env'][name])
+  return os.environ[CONFIG['env'][name]]
