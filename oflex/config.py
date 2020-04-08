@@ -16,10 +16,10 @@ RAW_CONFIG = dict(
   queries=dict(
     # todo: make the SQL queries use named parameters
     create_user_email="""insert into {tab[users]} ({col[username]}, {col[auth_method]}, {col[email]}, {col[pass_hash]}, {col[pass_salt]})
-      values (%s, 'email', %s, %s, %s)
+      values (%(username)s, 'email', %(email)s, %(pass_hash)s, %(pass_salt)s)
       returning {col[userid]}""",
-    create_user_sms="insert into {tab[users]} ({col[username]}, {col[auth_method]}, {col[sms]}) values (%s, 'sms', %s) returning {col[userid]}",
-    get_user_email="select {col[auth_method]}, {col[pass_hash]}, {col[pass_salt]}, {col[userid]} from {tab[users]} where {col[email]} = %s",
+    create_user_sms="insert into {tab[users]} ({col[username]}, {col[auth_method]}, {col[sms]}) values (%(username)s, 'sms', %(sms)s) returning {col[userid]}",
+    get_user_email="select {col[auth_method]}, {col[pass_hash]}, {col[pass_salt]}, {col[userid]} from {tab[users]} where {col[email]} = %(email)s",
   ),
   session_expiry=86400 * 90,
   # maximum size of connection pool
@@ -32,7 +32,8 @@ RAW_CONFIG = dict(
   max_email=400,
 )
 
-CONFIG = None
+# note: this is a dict rather than None so import refs work
+CONFIG = {}
 
 def load_config(path='oflex.yml'):
   "load config from file"
@@ -47,4 +48,4 @@ def render_config():
     key: val.format_map(tmp)
     for key, val in tmp['queries'].items()
   }
-  CONFIG = tmp
+  CONFIG.update(tmp)

@@ -23,7 +23,10 @@ def post_login_email():
   "login with email"
   form = flask.request.form
   with pool.withcon() as con, con.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-    cur.execute(CONFIG['get_user_email'], (form['email'],))
+    cur.execute(
+      CONFIG['queries']['get_user_email'],
+      {'email': form['email']}
+    )
     row = cur.fetchone()
     if row is None:
       # todo: flash
@@ -51,7 +54,10 @@ def post_join_email():
   with pool.withcon() as con, con.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
     # todo: rate limiting
     # todo: clearer error for duplicate email
-    cur.execute(CONFIG['create_user_email'], (form['username'], form['email'], pass_hash, pass_salt))
+    cur.execute(
+      CONFIG['queries']['create_user_email'],
+      {'username': form['username'], 'email': form['email'], 'pass_hash': pass_hash, 'pass_salt': pass_salt}
+    )
     row = cur.fetchone()
     set_session(row.userid)
   return flask.redirect(flask.url_for(CONFIG['login_home']))

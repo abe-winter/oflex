@@ -1,5 +1,5 @@
 import flask, psycopg2.pool, psycopg2.extras, contextlib, os, redis, jinja2
-from .config import CONFIG
+from .config import render_config, CONFIG
 
 def fetch1_abort(cur, status=404):
   row = cur.fetchone()
@@ -18,6 +18,7 @@ def withcon():
     pool.putconn(con)
 
 def init():
+  render_config()
   app = flask.current_app
   # todo: register postgres uuid
   app.pool = psycopg2.pool.ThreadedConnectionPool(0, CONFIG['maxconn'], os.environ[CONFIG['env_pg_cx']])
