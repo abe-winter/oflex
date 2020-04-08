@@ -1,4 +1,4 @@
-import yaml
+import yaml, os
 
 RAW_CONFIG = dict(
   # tables
@@ -24,11 +24,16 @@ RAW_CONFIG = dict(
   session_expiry=86400 * 90,
   # maximum size of connection pool
   maxconn=4,
-  # name of environment variable that holds postgres connection string
-  env_pg_cx='AUTOMIG_CON',
-  env_redis_cx='REDIS_HOST',
+  env=dict(
+    # name of environment variable that holds postgres connection string
+    pg='AUTOMIG_CON',
+    redis='REDIS_HOST',
+    twilio_sid='TWILIO_SID',
+    twilio_token='TWILIO_TOKEN',
+  ),
   # route to visit after successful login
   login_home='home',
+  # maxlen
   max_email=400,
 )
 
@@ -49,3 +54,7 @@ def render_config():
     for key, val in tmp['queries'].items()
   }
   CONFIG.update(tmp)
+
+def getenv(name):
+  "get env var with indirection"
+  return os.environ(CONFIG['env'][name])

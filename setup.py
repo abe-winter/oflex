@@ -20,6 +20,7 @@ setup(
     'pyyaml',
     'redis',
     'scrypt==0.8.13',
+    'twilio',
   ],
   python_requires='>=3.6', # for format strings
   long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),

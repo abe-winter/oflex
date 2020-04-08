@@ -1,5 +1,5 @@
-import flask, psycopg2.pool, psycopg2.extras, contextlib, os, redis, jinja2
-from .config import render_config, CONFIG
+import flask, psycopg2.pool, psycopg2.extras, contextlib, os, redis, jinja2, twilio.rest
+from .config import render_config, CONFIG, getenv
 
 def fetch1_abort(cur, status=404):
   row = cur.fetchone()
@@ -21,8 +21,9 @@ def init():
   render_config()
   app = flask.current_app
   # todo: register postgres uuid
-  app.pool = psycopg2.pool.ThreadedConnectionPool(0, CONFIG['maxconn'], os.environ[CONFIG['env_pg_cx']])
-  app.redis = redis.Redis(os.environ[CONFIG['env_redis_cx']])
+  app.pool = psycopg2.pool.ThreadedConnectionPool(0, CONFIG['maxconn'], getenv('pg'))
+  app.redis = redis.Redis(getenv('redis'))
+  app.twilio = twilio.rest.Client(getenv('twilio_sid'), getenv('twilio_token'))
   app.jinja_loader = jinja2.ChoiceLoader([
     app.jinja_loader,
     jinja2.FileSystemLoader([os.path.join(os.path.dirname(__file__), 'templates')]),
