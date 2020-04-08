@@ -7,7 +7,6 @@ def require_session(inner):
     # todo: remember redirect page
     # todo: freak out if inner fn is already decorated with a route
     sessionid = flask.session.get('sessionid')
-    print('sessionid', sessionid, flask.session)
     if not sessionid:
       return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
     raw = flask.current_app.redis.get(f'session-{sessionid}')
