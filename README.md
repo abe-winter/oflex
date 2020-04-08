@@ -32,3 +32,13 @@ These things wouldn't normally belong together and are only bound together by th
 * (You can customize the configs, but that's a waste)
 * use `flask.current_app.pool` or `pool.withcon`, and `flask.current_app.redis` in your thing
 * You have a base.htm template that defines styles, headers, etc
+
+## Consider also
+
+These other flask login libraries that I haven't evaluated at all and am not recommending:
+
+* https://github.com/mattupstate/flask-security
+* https://github.com/lingthio/Flask-User
+* https://github.com/maxcountryman/flask-login
+
+There are a lot of these because schema integration is hard and unpleasant.
