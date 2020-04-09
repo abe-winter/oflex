@@ -108,14 +108,21 @@ def get_confirm():
 @APP.route('/login/sms/confirm', methods=['POST'])
 def post_confirm():
   assert CONFIG['support_sms']
-  raise NotImplementedError
   normal = flask.session['sms']
-  received_code = flask.request.json['code']
-  key = f'sms-{normal}'
-  correct_code = flask.current_app.redis.get(key)
+  received_code = flask.request.form['confirm']
+  confirm_key = f'sms-{normal}'
+  correct_code = flask.current_app.redis.get(confirm_key)
   if received_code.encode() == correct_code:
-    set_user_session(normal)
-    flask.current_app.redis.delete(key)
+    dest = flask.url_for(CONFIG['login_home'])
+    with pool.withcon() as con, con.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
+      # todo: rate limiting
+      cur.execute(CONFIG['queries']['get_user_sms'], {'sms': normal})
+      row = cur.fetchone()
+      if not row:
+        cur.execute(CONFIG['queries']['create_user_sms'], {'sms': normal})
+        dest = flask.url_for('oflex.blueprint.username')
+      set_session(row.userid)
+    flask.current_app.redis.delete(confirm_key)
     return flask.jsonify({'ok': True})
   else:
-    return flask.jsonify({'ok': False, 'error': "Bad code. Try again or request another code"})
+    flask.abort(flask.Response('Bad code. Try again or request another code', status=401))

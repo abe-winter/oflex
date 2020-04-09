@@ -18,8 +18,10 @@ RAW_CONFIG = dict(
     create_user_email="""insert into {tab[users]} ({col[username]}, {col[auth_method]}, {col[email]}, {col[pass_hash]}, {col[pass_salt]})
       values (%(username)s, 'email', %(email)s, %(pass_hash)s, %(pass_salt)s)
       returning {col[userid]}""",
-    create_user_sms="insert into {tab[users]} ({col[username]}, {col[auth_method]}, {col[sms]}) values (%(username)s, 'sms', %(sms)s) returning {col[userid]}",
+    # note: this doesn't use username because it's 'login or create', username is a separate step
+    create_user_sms="insert into {tab[users]} ({col[auth_method]}, {col[sms]}) values ('sms', %(sms)s) returning {col[userid]}",
     get_user_email="select {col[auth_method]}, {col[pass_hash]}, {col[pass_salt]}, {col[userid]} from {tab[users]} where {col[email]} = %(email)s",
+    get_user_sms='select {col[auth_method]}, {col[userid]} from {tab[users]} where {col[sms]} = %(sms)s'
   ),
   session_expiry=86400 * 90,
   # maximum size of connection pool
