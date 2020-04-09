@@ -30,11 +30,14 @@ RAW_CONFIG = dict(
     redis='REDIS_HOST',
     twilio_sid='TWILIO_SID',
     twilio_token='TWILIO_TOKEN',
+    twilio_from='TWILIO_FROM',
   ),
   # route to visit after successful login
   login_home='home',
   # maxlen
   max_email=400,
+  support_sms=True,
+  appname='oflex',
 )
 
 # note: this is a dict rather than None so import refs work

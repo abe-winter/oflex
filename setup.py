@@ -8,7 +8,7 @@ from oflex.version import __version__
 setup(
   name='oflex',
   version= __version__,
-  description="O(pinionated) fl(ask) ex(tensions) for login & connection pooling",
+  description="Opinionated flask extensions for login & connection pooling",
   author="Abe Winter",
   author_email="awinter.public+oflex@gmail.com",
   url="https://github.com/abe-winter/oflex",
@@ -21,6 +21,7 @@ setup(
     'redis',
     'scrypt==0.8.13',
     'twilio',
+    'phonenumbers',
   ],
   python_requires='>=3.6', # for format strings
   long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),

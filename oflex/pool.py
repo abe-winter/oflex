@@ -23,7 +23,8 @@ def init():
   # todo: register postgres uuid
   app.pool = psycopg2.pool.ThreadedConnectionPool(0, CONFIG['maxconn'], getenv('pg'))
   app.redis = redis.Redis(getenv('redis'))
-  app.twilio = twilio.rest.Client(getenv('twilio_sid'), getenv('twilio_token'))
+  if CONFIG['support_sms']:
+    app.twilio = twilio.rest.Client(getenv('twilio_sid'), getenv('twilio_token'))
   app.jinja_loader = jinja2.ChoiceLoader([
     app.jinja_loader,
     jinja2.FileSystemLoader([os.path.join(os.path.dirname(__file__), 'templates')]),
