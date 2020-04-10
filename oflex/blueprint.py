@@ -1,5 +1,5 @@
 import flask, uuid, json, scrypt, psycopg2.extras, os, phonenumbers, random
-from . import pool
+from . import pool, middleware
 from .config import CONFIG, getenv
 
 APP = flask.Blueprint(__name__, 'oflex')
@@ -120,9 +120,34 @@ def post_confirm():
       row = cur.fetchone()
       if not row:
         cur.execute(CONFIG['queries']['create_user_sms'], {'sms': normal})
+        row = cur.fetchone()
+        dest = flask.url_for('oflex.blueprint.username')
+      elif not row.username:
         dest = flask.url_for('oflex.blueprint.username')
       set_session(row.userid)
     flask.current_app.redis.delete(confirm_key)
-    return flask.jsonify({'ok': True})
+    return flask.redirect(dest)
   else:
     flask.abort(flask.Response('Bad code. Try again or request another code', status=401))
+
+@APP.route('/login/username')
+def username():
+  assert CONFIG['support_sms']
+  return flask.render_template('username.htm')
+
+@APP.route('/login/username', methods=['POST'])
+@middleware.require_session
+def post_username():
+  assert CONFIG['support_sms']
+  username = flask.request.form['username']
+  if len(username) < 3:
+    flask.abort(flask.Response('Username too short -- 3 characters minimum', status=400))
+  if len(username) > 64:
+    flask.abort(flask.Response('Username too long -- 64 characters max', status=400))
+  with pool.withcon() as con, con.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
+    cur.execute(CONFIG['queries']['get_username'], {'userid': flask.g.session['userid']})
+    row = cur.fetchone()
+    if row.username:
+      flask.abort(flask.Response("Can't set a username! You already have one", status=400))
+    cur.execute(CONFIG['queries']['update_username'], {'username': username, 'userid': flask.g.session['userid']})
+  return flask.redirect(flask.url_for(CONFIG['login_home']))
