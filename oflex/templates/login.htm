@@ -10,5 +10,8 @@
   <br>
   <button class="btn btn-primary">Sign in</button>
 </form>
-<p><a href="{{url_for('oflex.blueprint.get_join')}}">Or create an account</a></p>
+<p class="lead">Or <a href="{{url_for('oflex.blueprint.get_join')}}">create an account with email</a></p>
+{% if support_sms %}
+  <p class="lead">Or <a href="{{url_for('oflex.blueprint.get_login_sms')}}">use SMS</a></p>
+{% endif %}
 {% endblock container %}

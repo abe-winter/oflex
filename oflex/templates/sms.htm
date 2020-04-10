@@ -1,0 +1,13 @@
+{% extends "base.htm" %}
+{% block title %}SMS login{% endblock %}
+{% block container %}
+<h2>Sign in with SMS</h2>
+<p class="text-muted">This creates an account if you don't already have one. Otherwise, it just logs you in.</p>
+<hr>
+<form method="post" action="{{url_for('oflex.blueprint.post_login_sms')}}">
+  <label>Phone number <input type="tel" class="form-control" placeholder="phone" name="sms" autofocus required></label>
+  <button class="btn btn-primary">Send me a confirmation code</button>
+</form>
+<p class="lead">Or <a href="{{url_for('oflex.blueprint.get_join')}}">Or create an account with email</a></p>
+<p class="lead">Or <a href="{{url_for('oflex.blueprint.get_login')}}">login with email</a></p>
+{% endblock container %}

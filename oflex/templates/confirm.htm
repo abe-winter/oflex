@@ -1,0 +1,12 @@
+{% extends "base.htm" %}
+{% block title %}confirm SMS{% endblock %}
+{% block container %}
+<h2>Confirm SMS code</h2>
+<p class="text-muted">Wait for a login code to show up on your phone. If this takes more than 30 seconds, try again.</p>
+<hr>
+<form method="post" action="{{url_for('oflex.blueprint.post_confirm')}}">
+  <label>Confirmation code <input type="numeric" class="form-control" placeholder="confirmation code" name="confirm" autofocus required></label>
+  <br>
+  <button class="btn btn-primary">Confirm</button>
+</form>
+{% endblock container %}
