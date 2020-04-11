@@ -14,8 +14,8 @@ These things wouldn't normally belong together and are only bound together by th
 
 * [x] flask blueprints for create-account and login pages
 * [x] and scrypt passwords
-* [ ] and twilio login
-* [x] login-required decorator
+* [x] and twilio login
+* [x] login-required decorator which populates `flask.g.session`
 * [x] graphene / graphql middleware login-required
 * [ ] HSTS middleware
 * [x] postgres & redis initializer
@@ -25,6 +25,7 @@ These things wouldn't normally belong together and are only bound together by th
 * [ ] in-memory and redis rate limiting
 * [ ] email verification
 * [ ] invitations & preapproval lists
+* [ ] oauth
 
 ## What you should do to use this
 
@@ -35,10 +36,10 @@ These things wouldn't normally belong together and are only bound together by th
 
 ## Consider also
 
-These other flask login libraries that I haven't evaluated at all and am not recommending:
+These other flask login libraries that I haven't evaluated at all:
 
 * https://github.com/mattupstate/flask-security
 * https://github.com/lingthio/Flask-User
 * https://github.com/maxcountryman/flask-login
 
-There are a lot of these because schema integration is hard and unpleasant.
+There are a lot of these because schema integration is difficult.
