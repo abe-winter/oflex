@@ -4,7 +4,7 @@
 <h2>Create an account</h2>
 <hr>
 <form method="post" action="{{url_for('oflex.blueprint.post_join_email')}}">
-  <label>Public username <input type="text" class="form-control" placeholder="username" name="username" autofocus required></label>
+  <label>Username. {{username_comment}} <input type="text" class="form-control" placeholder="username" name="username" autofocus required></label>
   <br>
   <label>Email <input type="email" class="form-control" placeholder="email" name="email" required></label>
   <br>

@@ -42,6 +42,8 @@ RAW_CONFIG = dict(
   max_email=400,
   support_sms=True,
   appname='oflex',
+  # username comment is editable so sites can give guidance about how this will be used
+  username_comment='(public)',
 )
 
 # note: this is a dict rather than None so import refs work

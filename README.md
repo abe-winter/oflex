@@ -26,6 +26,7 @@ These things wouldn't normally belong together and are only bound together by th
 * [ ] email verification
 * [ ] invitations & preapproval lists
 * [ ] oauth
+* [ ] add sample schema
 
 ## What you should do to use this
 

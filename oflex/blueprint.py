@@ -40,7 +40,7 @@ def post_login_email():
 
 @APP.route('/join')
 def get_join():
-  return flask.render_template('join.htm', support_sms=CONFIG['support_sms'])
+  return flask.render_template('join.htm', support_sms=CONFIG['support_sms'], username_comment=CONFIG['username_comment'])
 
 @APP.route('/join/email', methods=['POST'])
 def post_join_email():
@@ -133,7 +133,7 @@ def post_confirm():
 @APP.route('/login/username')
 def username():
   assert CONFIG['support_sms']
-  return flask.render_template('username.htm')
+  return flask.render_template('username.htm', username_comment=CONFIG['username_comment'])
 
 @APP.route('/login/username', methods=['POST'])
 @middleware.require_session
