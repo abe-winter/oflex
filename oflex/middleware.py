@@ -2,6 +2,8 @@ import flask, json, functools
 
 def require_session(inner):
   "decorator to require login on a session. use beneath the @route() decorator or it won't work"
+  if hasattr(inner, '__wrapped__'):
+    print("warning: require_session is wrapping a function that already has been wrapped. Make sure you're using it *inside* the @route decorator", inner)
   @functools.wraps(inner)
   def outer(*args, **kwargs):
     # todo: remember redirect page
