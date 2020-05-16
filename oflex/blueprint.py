@@ -18,22 +18,27 @@ def set_session(userid):
   flask.session['sessionid'] = sessionid
   return sessionid
 
+def tobytes(raw):
+  "helper to return bytes whether bytes or memoryview (postgres / sqlite)"
+  return raw if isinstance(raw, bytes) else raw.tobytes()
+
 @APP.route('/login/email', methods=['POST'])
 def post_login_email():
   "login with email"
   form = flask.request.form
-  with pool.withcon() as con, con.cursor() as cur:
+  with pool.withcon() as con:
+    cur = con.cursor()
     cur.execute(
       CONFIG['queries']['get_user_email'],
       (form['email'],)
     )
-    row = cur.fetchone()
-    if row is None:
+    raw_row = cur.fetchone()
+    if raw_row is None:
       # todo: flash
       return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
-  row = CONFIG['query_fields']['get_user_email'](*row)
+  row = CONFIG['query_fields']['get_user_email'](*raw_row)
   assert row.auth_method == 'email'
-  if row.pass_hash.tobytes() != scrypt.hash(form['password'].encode(), row.pass_salt.tobytes()):
+  if tobytes(row.pass_hash) != scrypt.hash(form['password'].encode(), tobytes(row.pass_salt)):
     # todo: flash
     return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
   set_session(row.userid)
@@ -53,7 +58,8 @@ def post_join_email():
   pass_salt = os.urandom(64)
   pass_hash = scrypt.hash(form['password'].encode(), pass_salt)
   userid = str(uuid.uuid4())
-  with pool.withcon() as con, con.cursor() as cur:
+  with pool.withcon() as con:
+    cur = con.cursor()
     # todo: rate limiting
     # todo: clearer error for duplicate email
     cur.execute(
@@ -116,7 +122,8 @@ def post_confirm():
   if received_code.encode() != correct_code:
     flask.abort(flask.Response('Bad code. Try again or request another code', status=401))
   dest = flask.url_for(CONFIG['login_home'])
-  with pool.withcon() as con, con.cursor() as cur:
+  with pool.withcon() as con:
+    cur = con.cursor()
     # todo: rate limiting
     cur.execute(CONFIG['queries']['get_user_sms'], (normal,))
     row = cur.fetchone()
@@ -147,7 +154,8 @@ def post_username():
     flask.abort(flask.Response('Username too short -- 3 characters minimum', status=400))
   if len(username) > 64:
     flask.abort(flask.Response('Username too long -- 64 characters max', status=400))
-  with pool.withcon() as con, con.cursor() as cur:
+  with pool.withcon() as con:
+    cur = con.cursor()
     cur.execute(CONFIG['queries']['get_username'], (flask.g.session['userid'],))
     row = CONFIG['query_fields']['get_username'](*cur.fetchone())
     if row.username:
