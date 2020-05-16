@@ -40,9 +40,15 @@ class LocalRedis(dict):
 def init():
   render_config()
   app = flask.current_app
-  import psycopg2.pool # delayed so this isn't a hard dep
-  # todo: register postgres uuid
-  app.pool = psycopg2.pool.ThreadedConnectionPool(0, CONFIG['maxconn'], getenv('automig_con'))
+  if CONFIG['db_dialect'] == 'postgres':
+    # todo: register postgres uuid
+    import psycopg2.pool # delayed so this isn't a hard dep
+    app.pool = psycopg2.pool.ThreadedConnectionPool(0, CONFIG['maxconn'], getenv('automig_con'))
+  elif CONFIG['db_dialect'] == 'sqlite':
+    import sqlite3
+    app.pool = sqlite3.connect(getenv('automig_con'))
+  else:
+    raise ValueError('unk dialect', CONFIG['db_dialect'])
   app.redis = LocalRedis() if CONFIG['local_redis'] else redis.Redis(getenv('redis'))
   if CONFIG['support_sms']:
     import twilio.rest # delayed so this isn't a hard dep
