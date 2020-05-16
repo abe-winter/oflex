@@ -1,4 +1,5 @@
 import flask, uuid, json, scrypt, os, phonenumbers, random
+from datetime import datetime, timedelta
 from . import pool, middleware
 from .config import CONFIG, getenv
 
@@ -10,6 +11,7 @@ def get_login():
 
 def set_session(userid):
   flask.session['userid'] = userid
+  flask.session['expires'] = datetime.now() + timedelta(days=365)
 
 def tobytes(raw):
   "helper to return bytes whether bytes or memoryview (postgres / sqlite)"
