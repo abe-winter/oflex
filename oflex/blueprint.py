@@ -9,14 +9,7 @@ def get_login():
   return flask.render_template('login.htm', support_sms=CONFIG['support_sms'])
 
 def set_session(userid):
-  sessionid = str(uuid.uuid4())
-  flask.current_app.redis.setex(
-    f'session-{sessionid}',
-    CONFIG['session_expiry'],
-    json.dumps({'userid': str(userid)})
-  )
-  flask.session['sessionid'] = sessionid
-  return sessionid
+  flask.session['userid'] = userid
 
 def tobytes(raw):
   "helper to return bytes whether bytes or memoryview (postgres / sqlite)"

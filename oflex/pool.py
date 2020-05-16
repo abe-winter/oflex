@@ -23,26 +23,6 @@ def withcon():
     finally:
       pool.putconn(con)
 
-class LocalRedis(dict):
-  "barebones redis clone for in-mem"
-  # todo: just rely on the secure cookie for userid? ditch redis sessions completely.
-
-  def setex(self, key, expiry_seconds, value):
-    self[key] = (time.time() + expiry_seconds), value
-
-  def get(self, key):
-    row = dict.get(self, key)
-    if not row:
-      return None
-    expiry, value = row
-    if expiry is not None and expiry < time.time():
-      del self[key]
-      return None
-    return value
-
-  def delete(self, key):
-    return self.pop(key, None)
-
 def init():
   render_config()
   app = flask.current_app
@@ -54,7 +34,7 @@ def init():
     assert os.path.exists(getenv('automig_con'))
   else:
     raise ValueError('unk dialect', CONFIG['db_dialect'])
-  app.redis = LocalRedis() if CONFIG['local_redis'] else redis.Redis(getenv('redis'))
+  app.redis = redis.Redis(getenv('redis'))
   if CONFIG['support_sms']:
     import twilio.rest # delayed so this isn't a hard dep
     app.twilio = twilio.rest.Client(getenv('twilio_sid'), getenv('twilio_token'))
