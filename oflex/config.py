@@ -31,7 +31,7 @@ RAW_CONFIG = dict(
   db_dialect='postgres',
   env=dict(
     # name of environment variable that holds postgres connection string
-    pg='AUTOMIG_CON',
+    automig_con='AUTOMIG_CON',
     redis='REDIS_HOST',
     twilio_sid='TWILIO_SID',
     twilio_token='TWILIO_TOKEN',

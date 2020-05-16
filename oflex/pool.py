@@ -21,7 +21,7 @@ def init():
   render_config()
   app = flask.current_app
   # todo: register postgres uuid
-  app.pool = psycopg2.pool.ThreadedConnectionPool(0, CONFIG['maxconn'], getenv('pg'))
+  app.pool = psycopg2.pool.ThreadedConnectionPool(0, CONFIG['maxconn'], getenv('automig_con'))
   app.redis = redis.Redis(getenv('redis'))
   if CONFIG['support_sms']:
     app.twilio = twilio.rest.Client(getenv('twilio_sid'), getenv('twilio_token'))
