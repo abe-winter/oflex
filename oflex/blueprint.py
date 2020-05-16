@@ -1,4 +1,4 @@
-import flask, uuid, json, scrypt, psycopg2.extras, os, phonenumbers, random
+import flask, uuid, json, scrypt, os, phonenumbers, random
 from . import pool, middleware
 from .config import CONFIG, getenv
 
@@ -22,15 +22,16 @@ def set_session(userid):
 def post_login_email():
   "login with email"
   form = flask.request.form
-  with pool.withcon() as con, con.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
+  with pool.withcon() as con, con.cursor() as cur:
     cur.execute(
       CONFIG['queries']['get_user_email'],
-      {'email': form['email']}
+      (form['email'],)
     )
     row = cur.fetchone()
     if row is None:
       # todo: flash
       return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+  row = CONFIG['query_fields']['get_user_email'](*row)
   assert row.auth_method == 'email'
   if row.pass_hash.tobytes() != scrypt.hash(form['password'].encode(), row.pass_salt.tobytes()):
     # todo: flash
@@ -51,15 +52,15 @@ def post_join_email():
   assert '@' in form['email'] and len(form['email']) < CONFIG['max_email']
   pass_salt = os.urandom(64)
   pass_hash = scrypt.hash(form['password'].encode(), pass_salt)
-  with pool.withcon() as con, con.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
+  userid = str(uuid.uuid4())
+  with pool.withcon() as con, con.cursor() as cur:
     # todo: rate limiting
     # todo: clearer error for duplicate email
     cur.execute(
       CONFIG['queries']['create_user_email'],
-      {'username': form['username'], 'email': form['email'], 'pass_hash': pass_hash, 'pass_salt': pass_salt}
+      (userid, form['username'], 'email', form['email'], pass_hash, pass_salt)
     )
-    row = cur.fetchone()
-    set_session(row.userid)
+    set_session(userid)
   return flask.redirect(flask.url_for(CONFIG['login_home']))
 
 @APP.route('/logout', methods=['POST'])
@@ -112,23 +113,25 @@ def post_confirm():
   received_code = flask.request.form['confirm']
   confirm_key = f'sms-{normal}'
   correct_code = flask.current_app.redis.get(confirm_key)
-  if received_code.encode() == correct_code:
-    dest = flask.url_for(CONFIG['login_home'])
-    with pool.withcon() as con, con.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-      # todo: rate limiting
-      cur.execute(CONFIG['queries']['get_user_sms'], {'sms': normal})
-      row = cur.fetchone()
-      if not row:
-        cur.execute(CONFIG['queries']['create_user_sms'], {'sms': normal})
-        row = cur.fetchone()
-        dest = flask.url_for('oflex.blueprint.username')
-      elif not row.username:
-        dest = flask.url_for('oflex.blueprint.username')
-      set_session(row.userid)
-    flask.current_app.redis.delete(confirm_key)
-    return flask.redirect(dest)
-  else:
+  if received_code.encode() != correct_code:
     flask.abort(flask.Response('Bad code. Try again or request another code', status=401))
+  dest = flask.url_for(CONFIG['login_home'])
+  with pool.withcon() as con, con.cursor() as cur:
+    # todo: rate limiting
+    cur.execute(CONFIG['queries']['get_user_sms'], (normal,))
+    row = cur.fetchone()
+    row = row and CONFIG['query_fields']['get_user_sms'](*row)
+    userid = row and row.userid
+    if not row:
+      userid = str(uuid.uuid4())
+      cur.execute(CONFIG['queries']['create_user_sms'], (userid, 'sms', normal))
+      row = cur.fetchone()
+      dest = flask.url_for('oflex.blueprint.username')
+    elif not row.username:
+      dest = flask.url_for('oflex.blueprint.username')
+    set_session(userid)
+  flask.current_app.redis.delete(confirm_key)
+  return flask.redirect(dest)
 
 @APP.route('/login/username')
 def username():
@@ -144,10 +147,10 @@ def post_username():
     flask.abort(flask.Response('Username too short -- 3 characters minimum', status=400))
   if len(username) > 64:
     flask.abort(flask.Response('Username too long -- 64 characters max', status=400))
-  with pool.withcon() as con, con.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-    cur.execute(CONFIG['queries']['get_username'], {'userid': flask.g.session['userid']})
-    row = cur.fetchone()
+  with pool.withcon() as con, con.cursor() as cur:
+    cur.execute(CONFIG['queries']['get_username'], (flask.g.session['userid'],))
+    row = CONFIG['query_fields']['get_username'](*cur.fetchone())
     if row.username:
       flask.abort(flask.Response("Can't set a username! You already have one", status=400))
-    cur.execute(CONFIG['queries']['update_username'], {'username': username, 'userid': flask.g.session['userid']})
+    cur.execute(CONFIG['queries']['update_username'], (username, flask.g.session['userid']))
   return flask.redirect(flask.url_for(CONFIG['login_home']))
