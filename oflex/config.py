@@ -39,17 +39,12 @@ RAW_CONFIG = dict(
     userid='userid',
     sms='sms',
   ),
-  queries=dict(
-    # todo: make the SQL queries use named parameters
-    create_user_email="""insert into {tab[users]} ({col[username]}, {col[auth_method]}, {col[email]}, {col[pass_hash]}, {col[pass_salt]})
-      values (%(username)s, 'email', %(email)s, %(pass_hash)s, %(pass_salt)s)
-      returning {col[userid]}""",
-    # note: this doesn't use username because it's 'login or create', username is a separate step
-    create_user_sms="insert into {tab[users]} ({col[auth_method]}, {col[sms]}) values ('sms', %(sms)s) returning {col[userid]}",
-    get_user_email="select {col[auth_method]}, {col[pass_hash]}, {col[pass_salt]}, {col[userid]} from {tab[users]} where {col[email]} = %(email)s",
-    get_user_sms='select {col[auth_method]}, {col[userid]}, {col[username]} from {tab[users]} where {col[sms]} = %(sms)s',
-    get_username='select {col[username]} from {tab[users]} where {col[userid]} = %(userid)s',
-    update_username='update {tab[users]} set {col[username]} = %(username)s where {col[userid]} = %(userid)s',
+  queries=None,
+  # named fields namedtuple for select + insert returning
+  query_fields=dict(
+    get_user_email=collections.namedtuple('get_user_email', 'auth_method pass_hash pass_salt userid'),
+    get_user_sms=collections.namedtuple('get_user_sms', 'auth_method userid username'),
+    get_username=collections.namedtuple('get_username', 'username'),
   ),
   session_expiry=86400 * 90,
   # maximum size of connection pool
@@ -86,11 +81,17 @@ def render_config():
   "render queries"
   global CONFIG
   tmp = RAW_CONFIG.copy() # careful -- this isn't a deep copy
-  tmp['queries'] = {
-    key: val.format_map(tmp)
-    for key, val in tmp['queries'].items()
-  }
   assert tmp['db_dialect'] in ('postgres', 'sqlite')
+  render = QueryRenderer(tmp['col'], tmp['tab'], tmp['db_dialect'])
+  tmp['queries'] = dict(
+    create_user_email=render.insert('users', ('userid', 'username', 'auth_method', 'email', 'pass_hash', 'pass_salt')),
+    create_user_sms=render.insert('users', ('userid', 'auth_method', 'sms')),
+    update_username=render.update('users', 'username', 'userid'),
+    # note: get_* select queries are using namedtuple fields. so much ugly indirection here, just use an ORM
+    get_user_email=render.select('users', tmp['query_fields']['get_user_email']._fields, 'email'),
+    get_user_sms=render.select('users', tmp['query_fields']['get_user_sms']._fields, 'sms'),
+    get_username=render.select('users', tmp['query_fields']['get_username']._fields, 'userid'),
+  )
   CONFIG.update(tmp)
 
 def getenv(name):
