@@ -28,6 +28,7 @@ RAW_CONFIG = dict(
   session_expiry=86400 * 90,
   # maximum size of connection pool
   maxconn=4,
+  db_dialect='postgres',
   env=dict(
     # name of environment variable that holds postgres connection string
     pg='AUTOMIG_CON',
@@ -62,6 +63,7 @@ def render_config():
     key: val.format_map(tmp)
     for key, val in tmp['queries'].items()
   }
+  assert tmp['db_dialect'] in ('postgres', 'sqlite')
   CONFIG.update(tmp)
 
 def getenv(name):
