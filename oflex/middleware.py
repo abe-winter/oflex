@@ -1,4 +1,5 @@
 import flask, json, functools
+from datetime import datetime
 
 def require_session(inner):
   "decorator to require login on a session. use beneath the @route() decorator or it won't work"
@@ -7,26 +8,9 @@ def require_session(inner):
   @functools.wraps(inner)
   def outer(*args, **kwargs):
     # todo: remember redirect page
-    # todo: freak out if inner fn is already decorated with a route
-    sessionid = flask.session.get('sessionid')
-    if not sessionid:
+    userid = flask.session.get('userid')
+    if userid is None or 'expires' not in flask.session or flask.session['expires'] < datetime.now():
       return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
-    raw = flask.current_app.redis.get(f'session-{sessionid}')
-    if not raw:
-      return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
-    flask.g.session = json.loads(raw)
+    flask.g.session = {'userid': userid}
     return inner(*args, **kwargs)
   return outer
-
-class GQLAuthMiddleware:
-  "authorization middleware for graphql with graphene"
-  def resolve(self, next, root, info, **args):
-    if not hasattr(flask.g, 'session'):
-      sessionid = flask.session.get('sessionid')
-      if not sessionid:
-        flask.abort(401)
-      dets = flask.current_app.redis.get(f'session-{sessionid}')
-      if not dets:
-        flask.abort(401)
-      flask.g.session = json.loads(dets)
-    return next(root, info, **args)

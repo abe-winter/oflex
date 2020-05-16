@@ -1,4 +1,30 @@
-import yaml, os
+import yaml, os, collections
+
+class QueryRenderer:
+  "poor man's ORM"
+  def __init__(self, col, tab, dialect):
+    self.col = col
+    self.tab = tab
+    self.dialect = dialect
+
+  @property
+  def wildcard(self):
+    # sqlite driver doesn't support named param substitution.
+    return '?' if self.dialect == 'sqlite' else '%s'
+
+  def select(self, table, sel_cols, wherecol):
+    rendered_cols = ', '.join(self.col[col] for col in sel_cols)
+    return f"""select {rendered_cols} from {self.tab[table]}
+where {self.col[wherecol]} = {self.wildcard}"""
+
+  def update(self, table, setcol, wherecol):
+    return f"""update {self.tab[table]}
+set {self.col[setcol]} = {self.wildcard}
+where {self.col[wherecol]} = {self.wildcard}"""
+
+  def insert(self, table, cols):
+    return f"""insert into {self.tab[table]} ({', '.join(self.col[col] for col in cols)})
+values ({', '.join([self.wildcard] * len(cols))})"""
 
 RAW_CONFIG = dict(
   # tables
@@ -13,24 +39,21 @@ RAW_CONFIG = dict(
     userid='userid',
     sms='sms',
   ),
-  queries=dict(
-    # todo: make the SQL queries use named parameters
-    create_user_email="""insert into {tab[users]} ({col[username]}, {col[auth_method]}, {col[email]}, {col[pass_hash]}, {col[pass_salt]})
-      values (%(username)s, 'email', %(email)s, %(pass_hash)s, %(pass_salt)s)
-      returning {col[userid]}""",
-    # note: this doesn't use username because it's 'login or create', username is a separate step
-    create_user_sms="insert into {tab[users]} ({col[auth_method]}, {col[sms]}) values ('sms', %(sms)s) returning {col[userid]}",
-    get_user_email="select {col[auth_method]}, {col[pass_hash]}, {col[pass_salt]}, {col[userid]} from {tab[users]} where {col[email]} = %(email)s",
-    get_user_sms='select {col[auth_method]}, {col[userid]}, {col[username]} from {tab[users]} where {col[sms]} = %(sms)s',
-    get_username='select {col[username]} from {tab[users]} where {col[userid]} = %(userid)s',
-    update_username='update {tab[users]} set {col[username]} = %(username)s where {col[userid]} = %(userid)s',
+  queries=None,
+  # named fields namedtuple for select + insert returning
+  query_fields=dict(
+    get_user_email=collections.namedtuple('get_user_email', 'auth_method pass_hash pass_salt userid'),
+    get_user_sms=collections.namedtuple('get_user_sms', 'auth_method userid username'),
+    get_username=collections.namedtuple('get_username', 'username'),
   ),
   session_expiry=86400 * 90,
   # maximum size of connection pool
   maxconn=4,
+  db_dialect='postgres',
+  use_redis=True,
   env=dict(
     # name of environment variable that holds postgres connection string
-    pg='AUTOMIG_CON',
+    automig_con='AUTOMIG_CON',
     redis='REDIS_HOST',
     twilio_sid='TWILIO_SID',
     twilio_token='TWILIO_TOKEN',
@@ -58,10 +81,17 @@ def render_config():
   "render queries"
   global CONFIG
   tmp = RAW_CONFIG.copy() # careful -- this isn't a deep copy
-  tmp['queries'] = {
-    key: val.format_map(tmp)
-    for key, val in tmp['queries'].items()
-  }
+  assert tmp['db_dialect'] in ('postgres', 'sqlite')
+  render = QueryRenderer(tmp['col'], tmp['tab'], tmp['db_dialect'])
+  tmp['queries'] = dict(
+    create_user_email=render.insert('users', ('userid', 'username', 'auth_method', 'email', 'pass_hash', 'pass_salt')),
+    create_user_sms=render.insert('users', ('userid', 'auth_method', 'sms')),
+    update_username=render.update('users', 'username', 'userid'),
+    # note: get_* select queries are using namedtuple fields. so much ugly indirection here, just use an ORM
+    get_user_email=render.select('users', tmp['query_fields']['get_user_email']._fields, 'email'),
+    get_user_sms=render.select('users', tmp['query_fields']['get_user_sms']._fields, 'sms'),
+    get_username=render.select('users', tmp['query_fields']['get_username']._fields, 'userid'),
+  )
   CONFIG.update(tmp)
 
 def getenv(name):
