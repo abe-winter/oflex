@@ -1,4 +1,30 @@
-import yaml, os
+import yaml, os, collections
+
+class QueryRenderer:
+  "poor man's ORM"
+  def __init__(self, col, tab, dialect):
+    self.col = col
+    self.tab = tab
+    self.dialect = dialect
+
+  @property
+  def wildcard(self):
+    # sqlite driver doesn't support named param substitution.
+    return '?' if self.dialect == 'sqlite' else '%s'
+
+  def select(self, table, sel_cols, wherecol):
+    rendered_cols = ', '.join(self.col[col] for col in sel_cols)
+    return f"""select {rendered_cols} from {self.tab[table]}
+where {self.col[wherecol]} = {self.wildcard}"""
+
+  def update(self, table, setcol, wherecol):
+    return f"""update {self.tab[table]}
+set {self.col[setcol]} = {self.wildcard}
+where {self.col[wherecol]} = {self.wildcard}"""
+
+  def insert(self, table, cols):
+    return f"""insert into {self.tab[table]} ({', '.join(self.col[col] for col in cols)})
+values ({' '.join([self.wildcard] * len(cols))})"""
 
 RAW_CONFIG = dict(
   # tables
