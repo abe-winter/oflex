@@ -34,7 +34,8 @@ def init():
     assert os.path.exists(getenv('automig_con'))
   else:
     raise ValueError('unk dialect', CONFIG['db_dialect'])
-  app.redis = redis.Redis(getenv('redis'))
+  if CONFIG['use_redis']:
+    app.redis = redis.Redis(getenv('redis'))
   if CONFIG['support_sms']:
     import twilio.rest # delayed so this isn't a hard dep
     app.twilio = twilio.rest.Client(getenv('twilio_sid'), getenv('twilio_token'))

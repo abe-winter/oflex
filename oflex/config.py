@@ -50,6 +50,7 @@ RAW_CONFIG = dict(
   # maximum size of connection pool
   maxconn=4,
   db_dialect='postgres',
+  use_redis=True,
   env=dict(
     # name of environment variable that holds postgres connection string
     automig_con='AUTOMIG_CON',
