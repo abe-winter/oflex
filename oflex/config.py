@@ -24,7 +24,7 @@ where {self.col[wherecol]} = {self.wildcard}"""
 
   def insert(self, table, cols):
     return f"""insert into {self.tab[table]} ({', '.join(self.col[col] for col in cols)})
-values ({' '.join([self.wildcard] * len(cols))})"""
+values ({', '.join([self.wildcard] * len(cols))})"""
 
 RAW_CONFIG = dict(
   # tables
