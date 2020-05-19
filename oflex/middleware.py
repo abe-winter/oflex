@@ -10,6 +10,7 @@ def require_session(inner):
     # todo: remember redirect page
     userid = flask.session.get('userid')
     if userid is None or 'expires' not in flask.session or flask.session['expires'] < datetime.now():
+      print('redirecting', flask.url_for('oflex.blueprint.get_login')) # revert
       return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
     flask.g.session = {'userid': userid}
     return inner(*args, **kwargs)
