@@ -12,8 +12,11 @@ def fetch1_abort(cur, status=404):
 def withcon():
   if CONFIG['db_dialect'] == 'sqlite':
     con = sqlite3.connect(getenv('automig_con'))
-    yield con
-    con.commit()
+    try:
+      yield con
+      con.commit()
+    finally:
+      con.close()
   else:
     pool = flask.current_app.pool
     con = pool.getconn()
