@@ -9,7 +9,9 @@ def require_session(inner):
   def outer(*args, **kwargs):
     # todo: remember redirect page
     userid = flask.session.get('userid')
+    # note: 'expires' here should never matter b/c cookie expires in 31 days, but this is signed and that isn't I think so I have this
     if userid is None or 'expires' not in flask.session or flask.session['expires'] < datetime.now():
+      flask.flash('Session expired, sign in again')
       return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
     flask.g.session = {'userid': userid}
     return inner(*args, **kwargs)

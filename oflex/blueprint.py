@@ -1,5 +1,5 @@
 import flask, uuid, json, scrypt, os, phonenumbers, random
-from datetime import datetime
+from datetime import datetime, timedelta
 from . import pool, middleware
 from .config import CONFIG, getenv
 
@@ -11,7 +11,7 @@ def get_login():
 
 def set_session(userid):
   flask.session['userid'] = userid
-  flask.session['created'] = datetime.now() # not used yet
+  flask.session['expires'] = datetime.now() + timedelta(days=90) # used in middleware
   flask.session.permanent = True # i.e. permanent_session_lifetime = 31 days default. user can probably override this, expiration isn't secure.
 
 def tobytes(raw):
