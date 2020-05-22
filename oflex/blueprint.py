@@ -30,12 +30,12 @@ def post_login_email():
     )
     raw_row = cur.fetchone()
     if raw_row is None:
-      # todo: flash
+      flask.flash('Bad login info!')
       return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
   row = CONFIG['query_fields']['get_user_email'](*raw_row)
   assert row.auth_method == 'email'
   if tobytes(row.pass_hash) != scrypt.hash(form['password'].encode(), tobytes(row.pass_salt)):
-    # todo: flash
+    flask.flash('Bad login info!')
     return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
   set_session(row.userid)
   return flask.redirect(flask.url_for(CONFIG['login_home']))

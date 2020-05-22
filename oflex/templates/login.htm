@@ -3,6 +3,11 @@
 {% block container %}
 <h2>Sign in</h2>
 <hr>
+{% for message in get_flashed_messages() %}
+<div class="alert alert-warning">
+  {{message}}
+</div>
+{% endfor %}
 <form method="post" action="{{url_for('oflex.blueprint.post_login_email')}}">
   <label>Email <input type="email" class="form-control" placeholder="email" name="email" autofocus required></label>
   <br>
