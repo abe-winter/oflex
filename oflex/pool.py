@@ -34,7 +34,7 @@ def init():
     import psycopg2.pool # delayed so this isn't a hard dep
     app.pool = psycopg2.pool.ThreadedConnectionPool(0, CONFIG['maxconn'], getenv('automig_con'))
   elif CONFIG['db_dialect'] == 'sqlite':
-    assert os.path.exists(getenv('automig_con'))
+    assert os.path.exists(getenv('automig_con')), "sqlite DB path doesn't exist, did you forget to init?"
   else:
     raise ValueError('unk dialect', CONFIG['db_dialect'])
   if CONFIG['use_redis']:

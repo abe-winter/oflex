@@ -2,6 +2,8 @@
 
 ## 0.0.x series
 
+* unreleased
+  - ergonomics: clearer error when sqlite doesn't exist
 * 0.0.3
   - bugfix: `include_package_data`
   - feature: sqlite support (major refactor, might break postgres support, haven't tested)
