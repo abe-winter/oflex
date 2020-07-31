@@ -1,4 +1,4 @@
-import flask, uuid, json, scrypt, os, phonenumbers, random
+import flask, uuid, json, scrypt, os, random
 from datetime import datetime, timedelta
 from . import pool, middleware
 from .config import CONFIG, getenv
@@ -77,6 +77,7 @@ def get_login_sms():
 
 def send_sms_code(number):
   "aborts if there's a problem. doesn't hit twilio in FLASK_DEBUG mode"
+  import phonenumbers # delayed for soft dep
   try: number = phonenumbers.parse(number, 'US')
   except Exception as err:
     flask.abort(flask.Response(f"Problem parsing phone number: {str(err)}", status=400))
