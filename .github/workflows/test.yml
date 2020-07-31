@@ -10,7 +10,7 @@ jobs:
         python-version: '>=3.6'
     - name: deps
       run: |
-        pip install -e .
+        pip install -e .[sms]
         pip install pytest pylint
     - name: lint
       run: pylint -E oflex
