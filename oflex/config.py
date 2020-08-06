@@ -1,48 +1,22 @@
 import yaml, os, collections
-from dataclasses import dataclass
 
-@dataclass
 class QueryRenderer:
   "poor man's ORM"
-  # col and tab are indirection tables so oflex can adapt to DBs with different column names. consider getting rid of this.
-  col: dict
-  tab: dict
-  dialect: str
 
-  @property
-  def wildcard(self):
-    # sqlite driver doesn't support named param substitution.
-    return '?' if self.dialect == 'sqlite' else '%s'
+  def __init__(self, dialect):
+    self.dialect = dialect
+    self.wildcard = '?' if self.dialect == 'sqlite' else '%s'
 
   def select(self, table, sel_cols, wherecol):
-    rendered_cols = ', '.join(self.col[col] for col in sel_cols)
-    return f"""select {rendered_cols} from {self.tab[table]}
-where {self.col[wherecol]} = {self.wildcard}"""
+    return f"select {', '.join(sel_cols)} from {table} where {wherecol} = {self.wildcard}"
 
   def update(self, table, setcol, wherecol):
-    return f"""update {self.tab[table]}
-set {self.col[setcol]} = {self.wildcard}
-where {self.col[wherecol]} = {self.wildcard}"""
+    return f"update {table} set {setcol} = {self.wildcard} where {wherecol} = {self.wildcard}"
 
   def insert(self, table, cols):
-    return f"""insert into {self.tab[table]} ({', '.join(self.col[col] for col in cols)})
-values ({', '.join([self.wildcard] * len(cols))})"""
+    return f"insert into {table} ({', '.join(cols)}) values ({', '.join([self.wildcard] * len(cols))})"
 
 RAW_CONFIG = dict(
-  # tables
-  tab=dict(users='users'),
-  # columns
-  col=dict(
-    username='username',
-    auth_method='auth_method',
-    email='email',
-    pass_hash='pass_hash',
-    pass_salt='pass_salt',
-    userid='userid',
-    verification_code='verification_code',
-    verified='verified',
-    sms='sms',
-  ),
   queries=None,
   # named fields namedtuple for select + insert returning
   query_fields=dict(
@@ -91,7 +65,7 @@ def render_config():
   global CONFIG
   tmp = RAW_CONFIG.copy() # this isn't a deep copy -- why am I bothering? what's RAW_CONFIG -> CONFIG about?
   assert tmp['db_dialect'] in ('postgres', 'sqlite')
-  render = QueryRenderer(tmp['col'], tmp['tab'], tmp['db_dialect'])
+  render = QueryRenderer(tmp['db_dialect'])
   if tmp['require_verification']:
     # ugh: this is going to cause problems someday
     tmp['query_fields']['get_user_email'] = tmp['query_fields']['get_user_email_ver']
