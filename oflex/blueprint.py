@@ -1,4 +1,4 @@
-import flask, uuid, json, scrypt, os, random, binascii
+import flask, uuid, json, scrypt, os, random, binascii, logging
 from datetime import datetime, timedelta
 from . import pool, middleware
 from .config import CONFIG, getenv
@@ -57,20 +57,23 @@ def get_verify():
     row = cur.fetchone()
     unk_details = flask.Response("Unknown verification details", status=404)
     if not row:
-      print('email not found', email)
+      logging.debug('unk email %s', email)
       flask.abort(unk_details) # possible attack
     actual_code, verified, pass_hash = row
     if verified is not None and actual_code == verification_code:
       flask.abort(flask.Response("Already verified!", status=400))
     if verified is not None or actual_code != verification_code:
-      print('code_mismatch', actual_code, verification_code)
+      logging.debug('already verified (%s) or bad code (%s)', verified is not None, actual_code != verification_code)
       flask.abort(unk_details) # possible attack
     assert verified is None and actual_code == verification_code
     cur.execute('update users set verified = now() where email = %s', (email,))
     cur.execute('commit')
   if pass_hash is None:
-    return flask.redirect(flask.url_for('oflex.blueprint.get_finish'))
+    # note: this is the pre-pass case; oflex can't generate this case, it requires an invite flow initiated by the app
+    # todo: add an invite() function somewhere to do this
+    return flask.redirect(flask.url_for('oflex.blueprint.get_finish', email=email, verification_code=verification_code))
   else:
+    # note: has-pass case
     flask.flash('Verification successful! Now log in')
     return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
 
@@ -81,8 +84,18 @@ def get_finish():
 
 @APP.route('/finish', methods=['POST'])
 def post_finish():
-  print('form', flask.request.form)
-  raise NotImplementedError
+  form = flask.request.form
+  pass_salt = os.urandom(64)
+  pass_hash = scrypt.hash(form['password'].encode(), pass_salt)
+  with pool.withcon() as con:
+    cur = con.cursor()
+    cur.execute('select userid, verification_code from users where email = %s', (form['email'],))
+    userid, actual_code = cur.fetchone()
+    if form['verification_code'] != actual_code:
+      flask.abort(flask.Response("Bad verification code; make sure you followed the invite link correctly. Ask your admin to send you another invitation maybe.", status=400))
+    cur.execute('update users set pass_salt=%s, pass_hash=%s where userid=%s', (pass_salt, pass_hash, userid))
+  flask.flash("Password set successfully! Now log in")
+  return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
 
 @APP.route('/join')
 def get_join():
