@@ -1,4 +1,4 @@
-import yaml, os, collections
+import yaml, os, collections, flask
 
 class QueryRenderer:
   "poor man's ORM"
@@ -15,6 +15,9 @@ class QueryRenderer:
 
   def insert(self, table, cols):
     return f"insert into {table} ({', '.join(cols)}) values ({', '.join([self.wildcard] * len(cols))})"
+
+def default_send_verify(email, verification_code):
+  print('verify', flask.url_for('oflex.blueprint.get_verify', email=email, verification_code=verification_code, _external=True))
 
 RAW_CONFIG = dict(
   queries=None,
@@ -49,7 +52,7 @@ RAW_CONFIG = dict(
   username_comment='(public)',
   # require_verification means to have 'verified' and 'verification_code' fields for email login
   require_verification=False,
-  send_verification_email=lambda email, code: print('todo: verification email', email, code),
+  send_verification_email=default_send_verify,
 )
 
 # note: this is a dict rather than None so import refs work
@@ -74,6 +77,7 @@ def render_config():
     create_user_email_ver=render.insert('users', ('userid', 'username', 'auth_method', 'email', 'pass_hash', 'pass_salt', 'verification_code')),
     create_user_sms=render.insert('users', ('userid', 'auth_method', 'sms')),
     update_username=render.update('users', 'username', 'userid'),
+    get_verify=render.select('users', ('verification_code', 'verified', 'pass_hash'), 'email'),
     # note: get_* select queries are using namedtuple fields. so much ugly indirection here, just use an ORM
     get_user_email=render.select('users', tmp['query_fields']['get_user_email']._fields, 'email'),
     get_user_sms=render.select('users', tmp['query_fields']['get_user_sms']._fields, 'sms'),

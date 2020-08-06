@@ -24,10 +24,7 @@ def post_login_email():
   form = flask.request.form
   with pool.withcon() as con:
     cur = con.cursor()
-    cur.execute(
-      CONFIG['queries']['get_user_email'],
-      (form['email'],)
-    )
+    cur.execute(CONFIG['queries']['get_user_email'], (form['email'],))
     raw_row = cur.fetchone()
     if raw_row is None:
       flask.flash('Bad login info!')
@@ -47,12 +44,45 @@ def post_login_email():
 def get_wait():
   return flask.render_template('wait_verify.htm')
 
-@APP.route('/verify/<verification_code>')
-def get_verify(verification_code):
+@APP.route('/verify')
+def get_verify():
+  email = flask.request.args['email']
+  verification_code = flask.request.args['verification_code']
+  if not email or not verification_code:
+    flask.abort(flask.Response("Missing query params in link", status=400))
   with pool.withcon() as con:
     cur = con.cursor()
-    raise NotImplementedError
-    cur.execute('')
+    cur.execute('begin')
+    cur.execute(CONFIG['queries']['get_verify'], (email,))
+    row = cur.fetchone()
+    unk_details = flask.Response("Unknown verification details", status=404)
+    if not row:
+      print('email not found', email)
+      flask.abort(unk_details) # possible attack
+    actual_code, verified, pass_hash = row
+    if verified is not None and actual_code == verification_code:
+      flask.abort(flask.Response("Already verified!", status=400))
+    if verified is not None or actual_code != verification_code:
+      print('code_mismatch', actual_code, verification_code)
+      flask.abort(unk_details) # possible attack
+    assert verified is None and actual_code == verification_code
+    cur.execute('update users set verified = now() where email = %s', (email,))
+    cur.execute('commit')
+  if pass_hash is None:
+    return flask.redirect(flask.url_for('oflex.blueprint.get_finish'))
+  else:
+    flask.flash('Verification successful! Now log in')
+    return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+
+@APP.route('/finish')
+def get_finish():
+  assert CONFIG['require_verification']
+  return flask.render_template('finish.htm', email=flask.request.args['email'], verification_code=flask.request.args['verification_code'])
+
+@APP.route('/finish', methods=['POST'])
+def post_finish():
+  print('form', flask.request.form)
+  raise NotImplementedError
 
 @APP.route('/join')
 def get_join():
@@ -73,7 +103,7 @@ def post_join_email():
     # todo: rate limiting
     # todo: clearer error for duplicate email
     if CONFIG['require_verification']:
-      verification_code = binascii.hexlify(os.urandom(10))
+      verification_code = binascii.hexlify(os.urandom(10)).decode()
       cur.execute(
         CONFIG['queries']['create_user_email_ver'],
         (userid, form['username'], 'email', form['email'], pass_hash, pass_salt, verification_code)
