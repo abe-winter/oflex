@@ -1,4 +1,4 @@
-import flask, uuid, json, scrypt, os, random
+import flask, uuid, json, scrypt, os, random, binascii
 from datetime import datetime, timedelta
 from . import pool, middleware
 from .config import CONFIG, getenv
@@ -37,8 +37,22 @@ def post_login_email():
   if tobytes(row.pass_hash) != scrypt.hash(form['password'].encode(), tobytes(row.pass_salt)):
     flask.flash('Bad login info!')
     return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+  if CONFIG['require_verification'] and not row.verified:
+    flask.flash("That password is correct but your email hasn't been verified yet!")
+    return flask.redirect(flask.url_for('oflex.blueprint.get_wait'))
   set_session(row.userid)
   return flask.redirect(flask.url_for(CONFIG['login_home']))
+
+@APP.route('/wait')
+def get_wait():
+  return flask.render_template('wait_verify.htm')
+
+@APP.route('/verify/<verification_code>')
+def get_verify(verification_code):
+  with pool.withcon() as con:
+    cur = con.cursor()
+    raise NotImplementedError
+    cur.execute('')
 
 @APP.route('/join')
 def get_join():
@@ -58,12 +72,24 @@ def post_join_email():
     cur = con.cursor()
     # todo: rate limiting
     # todo: clearer error for duplicate email
-    cur.execute(
-      CONFIG['queries']['create_user_email'],
-      (userid, form['username'], 'email', form['email'], pass_hash, pass_salt)
-    )
-    set_session(userid)
-  return flask.redirect(flask.url_for(CONFIG['login_home']))
+    if CONFIG['require_verification']:
+      verification_code = binascii.hexlify(os.urandom(10))
+      cur.execute(
+        CONFIG['queries']['create_user_email_ver'],
+        (userid, form['username'], 'email', form['email'], pass_hash, pass_salt, verification_code)
+      )
+      CONFIG['send_verification_email'](form['email'], verification_code)
+    else:
+      cur.execute(
+        CONFIG['queries']['create_user_email'],
+        (userid, form['username'], 'email', form['email'], pass_hash, pass_salt)
+      )
+      # note: only set_session in this !require_verification branch
+      set_session(userid)
+  if CONFIG['require_verification']:
+    return flask.redirect(flask.url_for('oflex.blueprint.get_wait'))
+  else:
+    return flask.redirect(flask.url_for(CONFIG['login_home']))
 
 @APP.route('/logout', methods=['POST'])
 def post_logout():

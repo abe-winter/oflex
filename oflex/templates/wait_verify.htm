@@ -1,0 +1,15 @@
+{% extends "base.htm" %}
+{% block title %}verify email{% endblock %}
+{% block container %}
+<h2>Verify your email</h2>
+<p class="lead">Wait for a verification email to show up in your inbox.</p>
+<p class="lead">Check your spam folder 🥫 if it doesn't seem to be working.</p>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-warning">{{message}}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+{% endblock container %}

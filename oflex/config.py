@@ -1,11 +1,13 @@
 import yaml, os, collections
+from dataclasses import dataclass
 
+@dataclass
 class QueryRenderer:
   "poor man's ORM"
-  def __init__(self, col, tab, dialect):
-    self.col = col
-    self.tab = tab
-    self.dialect = dialect
+  # col and tab are indirection tables so oflex can adapt to DBs with different column names. consider getting rid of this.
+  col: dict
+  tab: dict
+  dialect: str
 
   @property
   def wildcard(self):
@@ -37,12 +39,15 @@ RAW_CONFIG = dict(
     pass_hash='pass_hash',
     pass_salt='pass_salt',
     userid='userid',
+    verification_code='verification_code',
+    verified='verified',
     sms='sms',
   ),
   queries=None,
   # named fields namedtuple for select + insert returning
   query_fields=dict(
     get_user_email=collections.namedtuple('get_user_email', 'auth_method pass_hash pass_salt userid'),
+    get_user_email_ver=collections.namedtuple('get_user_email_ver', 'auth_method pass_hash pass_salt userid verified'),
     get_user_sms=collections.namedtuple('get_user_sms', 'auth_method userid username'),
     get_username=collections.namedtuple('get_username', 'username'),
   ),
@@ -70,6 +75,7 @@ RAW_CONFIG = dict(
   username_comment='(public)',
   # require_verification means to have 'verified' and 'verification_code' fields for email login
   require_verification=False,
+  send_verification_email=lambda email, code: print('todo: verification email', email, code),
 )
 
 # note: this is a dict rather than None so import refs work
@@ -83,11 +89,15 @@ def load_config(path='oflex.yml'):
 def render_config():
   "render queries"
   global CONFIG
-  tmp = RAW_CONFIG.copy() # careful -- this isn't a deep copy
+  tmp = RAW_CONFIG.copy() # this isn't a deep copy -- why am I bothering? what's RAW_CONFIG -> CONFIG about?
   assert tmp['db_dialect'] in ('postgres', 'sqlite')
   render = QueryRenderer(tmp['col'], tmp['tab'], tmp['db_dialect'])
+  if tmp['require_verification']:
+    # ugh: this is going to cause problems someday
+    tmp['query_fields']['get_user_email'] = tmp['query_fields']['get_user_email_ver']
   tmp['queries'] = dict(
     create_user_email=render.insert('users', ('userid', 'username', 'auth_method', 'email', 'pass_hash', 'pass_salt')),
+    create_user_email_ver=render.insert('users', ('userid', 'username', 'auth_method', 'email', 'pass_hash', 'pass_salt', 'verification_code')),
     create_user_sms=render.insert('users', ('userid', 'auth_method', 'sms')),
     update_username=render.update('users', 'username', 'userid'),
     # note: get_* select queries are using namedtuple fields. so much ugly indirection here, just use an ORM
