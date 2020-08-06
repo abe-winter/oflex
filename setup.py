@@ -24,7 +24,7 @@ setup(
   extras_require={
     'sms': ['twilio', 'phonenumbers'],
   },
-  python_requires='>=3.7', # 3.6 for format strings, 3.7 for dataclasses
+  python_requires='>=3.6', # for format strings
   long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),
   long_description_content_type='text/markdown',
   include_package_data=True,
