@@ -10,5 +10,5 @@ digraph {
 
   redeem -> "password exists"
   "password exists" -> login [label="Y"]
-  "password exists" -> "aux create flow" [label="N"]
+  "password exists" -> "/finish" [label="N"]
 }
