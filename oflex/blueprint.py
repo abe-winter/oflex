@@ -42,7 +42,7 @@ def post_login_email():
 
 @APP.route('/join')
 def get_join():
-  return flask.render_template('join.htm', support_sms=CONFIG['support_sms'], username_comment=CONFIG['username_comment'])
+  return flask.render_template('join.htm', support_sms=CONFIG['support_sms'], username_comment=CONFIG['username_comment'], username_name=CONFIG['username_name'])
 
 @APP.route('/join/email', methods=['POST'])
 def post_join_email():

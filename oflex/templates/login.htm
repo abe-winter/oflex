@@ -9,13 +9,13 @@
 </div>
 {% endfor %}
 <form method="post" action="{{url_for('oflex.blueprint.post_login_email')}}">
-  <label>Email <input type="email" class="form-control" placeholder="email" name="email" autofocus required></label>
+  <label class="mt-3">Email <input type="email" class="form-control" placeholder="email" name="email" autofocus required></label>
   <br>
-  <label>Password <input type="password" class="form-control" placeholder="password" name="password" required></label>
+  <label class="mt-3">Password <input type="password" class="form-control" placeholder="password" name="password" required></label>
   <br>
-  <button class="btn btn-primary">Sign in</button>
+  <button class="btn btn-primary mt-3">Sign in</button>
 </form>
-<p class="lead">Or <a href="{{url_for('oflex.blueprint.get_join')}}">create an account with email</a></p>
+<p class="lead mt-3">Or <a href="{{url_for('oflex.blueprint.get_join')}}">create an account with email</a></p>
 {% if support_sms %}
   <p class="lead">Or <a href="{{url_for('oflex.blueprint.get_login_sms')}}">use SMS</a></p>
 {% endif %}

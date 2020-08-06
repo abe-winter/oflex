@@ -66,7 +66,10 @@ RAW_CONFIG = dict(
   support_sms=True,
   appname='oflex',
   # username comment is editable so sites can give guidance about how this will be used
+  username_name='Username',
   username_comment='(public)',
+  # require_verification means to have 'verified' and 'verification_code' fields for email login
+  require_verification=False,
 )
 
 # note: this is a dict rather than None so import refs work
