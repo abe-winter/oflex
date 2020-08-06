@@ -1,0 +1,14 @@
+digraph {
+  invite -> "email exists"
+  "email exists" -> "add role and notify" [label="Y"]
+  "email exists" -> "insert user pre-password" [label="N"]
+  "insert user pre-password" -> "add role and notify"
+
+  login -> verified
+  verified -> "set session" [label="Y"]
+  verified -> wait [label="N"]
+
+  redeem -> "password exists"
+  "password exists" -> login [label="Y"]
+  "password exists" -> "/finish" [label="N"]
+}

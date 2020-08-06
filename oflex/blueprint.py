@@ -1,4 +1,4 @@
-import flask, uuid, json, scrypt, os, random
+import flask, uuid, json, scrypt, os, random, binascii, logging
 from datetime import datetime, timedelta
 from . import pool, middleware
 from .config import CONFIG, getenv
@@ -24,10 +24,7 @@ def post_login_email():
   form = flask.request.form
   with pool.withcon() as con:
     cur = con.cursor()
-    cur.execute(
-      CONFIG['queries']['get_user_email'],
-      (form['email'],)
-    )
+    cur.execute(CONFIG['queries']['get_user_email'], (form['email'],))
     raw_row = cur.fetchone()
     if raw_row is None:
       flask.flash('Bad login info!')
@@ -37,12 +34,72 @@ def post_login_email():
   if tobytes(row.pass_hash) != scrypt.hash(form['password'].encode(), tobytes(row.pass_salt)):
     flask.flash('Bad login info!')
     return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+  if CONFIG['require_verification'] and not row.verified:
+    flask.flash("That password is correct but your email hasn't been verified yet!")
+    return flask.redirect(flask.url_for('oflex.blueprint.get_wait'))
   set_session(row.userid)
   return flask.redirect(flask.url_for(CONFIG['login_home']))
 
+@APP.route('/wait')
+def get_wait():
+  return flask.render_template('wait_verify.htm')
+
+@APP.route('/verify')
+def get_verify():
+  email = flask.request.args['email']
+  verification_code = flask.request.args['verification_code']
+  if not email or not verification_code:
+    flask.abort(flask.Response("Missing query params in link", status=400))
+  with pool.withcon() as con:
+    cur = con.cursor()
+    cur.execute('begin')
+    cur.execute(CONFIG['queries']['get_verify'], (email,))
+    row = cur.fetchone()
+    unk_details = flask.Response("Unknown verification details", status=404)
+    if not row:
+      logging.debug('unk email %s', email)
+      flask.abort(unk_details) # possible attack
+    actual_code, verified, pass_hash = row
+    if verified is not None and actual_code == verification_code:
+      flask.abort(flask.Response("Already verified!", status=400))
+    if verified is not None or actual_code != verification_code:
+      logging.debug('already verified (%s) or bad code (%s)', verified is not None, actual_code != verification_code)
+      flask.abort(unk_details) # possible attack
+    assert verified is None and actual_code == verification_code
+    cur.execute('update users set verified = now() where email = %s', (email,))
+    cur.execute('commit')
+  if pass_hash is None:
+    # note: this is the pre-pass case; oflex can't generate this case, it requires an invite flow initiated by the app
+    # todo: add an invite() function somewhere to do this
+    return flask.redirect(flask.url_for('oflex.blueprint.get_finish', email=email, verification_code=verification_code))
+  else:
+    # note: has-pass case
+    flask.flash('Verification successful! Now log in')
+    return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+
+@APP.route('/finish')
+def get_finish():
+  assert CONFIG['require_verification']
+  return flask.render_template('finish.htm', email=flask.request.args['email'], verification_code=flask.request.args['verification_code'])
+
+@APP.route('/finish', methods=['POST'])
+def post_finish():
+  form = flask.request.form
+  pass_salt = os.urandom(64)
+  pass_hash = scrypt.hash(form['password'].encode(), pass_salt)
+  with pool.withcon() as con:
+    cur = con.cursor()
+    cur.execute('select userid, verification_code from users where email = %s', (form['email'],))
+    userid, actual_code = cur.fetchone()
+    if form['verification_code'] != actual_code:
+      flask.abort(flask.Response("Bad verification code; make sure you followed the invite link correctly. Ask your admin to send you another invitation maybe.", status=400))
+    cur.execute('update users set pass_salt=%s, pass_hash=%s where userid=%s', (pass_salt, pass_hash, userid))
+  flask.flash("Password set successfully! Now log in")
+  return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+
 @APP.route('/join')
 def get_join():
-  return flask.render_template('join.htm', support_sms=CONFIG['support_sms'], username_comment=CONFIG['username_comment'])
+  return flask.render_template('join.htm', support_sms=CONFIG['support_sms'], username_comment=CONFIG['username_comment'], username_name=CONFIG['username_name'])
 
 @APP.route('/join/email', methods=['POST'])
 def post_join_email():
@@ -58,12 +115,24 @@ def post_join_email():
     cur = con.cursor()
     # todo: rate limiting
     # todo: clearer error for duplicate email
-    cur.execute(
-      CONFIG['queries']['create_user_email'],
-      (userid, form['username'], 'email', form['email'], pass_hash, pass_salt)
-    )
-    set_session(userid)
-  return flask.redirect(flask.url_for(CONFIG['login_home']))
+    if CONFIG['require_verification']:
+      verification_code = binascii.hexlify(os.urandom(10)).decode()
+      cur.execute(
+        CONFIG['queries']['create_user_email_ver'],
+        (userid, form['username'], 'email', form['email'], pass_hash, pass_salt, verification_code)
+      )
+      CONFIG['send_verification_email'](form['email'], verification_code)
+    else:
+      cur.execute(
+        CONFIG['queries']['create_user_email'],
+        (userid, form['username'], 'email', form['email'], pass_hash, pass_salt)
+      )
+      # note: only set_session in this !require_verification branch
+      set_session(userid)
+  if CONFIG['require_verification']:
+    return flask.redirect(flask.url_for('oflex.blueprint.get_wait'))
+  else:
+    return flask.redirect(flask.url_for(CONFIG['login_home']))
 
 @APP.route('/logout', methods=['POST'])
 def post_logout():
