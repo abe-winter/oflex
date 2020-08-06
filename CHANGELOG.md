@@ -2,8 +2,12 @@
 
 ## 0.0.x series
 
-* unreleased
+* 0.0.4
   - ergonomics: clearer error when sqlite doesn't exist
+  - `require_verification` key in config to control invite-only mode
+  - /verify + /finish flows
+  - remove column name indirection
+  - invite-flow.dot graphviz of new flows
 * 0.0.3
   - bugfix: `include_package_data`
   - feature: sqlite support (major refactor, might break postgres support, haven't tested)
