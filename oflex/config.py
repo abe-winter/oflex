@@ -53,6 +53,7 @@ RAW_CONFIG = dict(
   # require_verification means to have 'verified' and 'verification_code' fields for email login
   require_verification=False,
   send_verification_email=default_send_verify,
+  login_hook=lambda kind, row: None,
 )
 
 # note: this is a dict rather than None so import refs work

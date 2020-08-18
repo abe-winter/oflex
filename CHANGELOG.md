@@ -2,6 +2,8 @@
 
 ## 0.0.x series
 
+* 0.0.5
+  - `CONFIG['login_hook']` for setting extra info in session
 * 0.0.4
   - ergonomics: clearer error when sqlite doesn't exist
   - `require_verification` key in config to control invite-only mode

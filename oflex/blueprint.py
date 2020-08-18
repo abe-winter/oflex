@@ -38,6 +38,7 @@ def post_login_email():
     flask.flash("That password is correct but your email hasn't been verified yet!")
     return flask.redirect(flask.url_for('oflex.blueprint.get_wait'))
   set_session(row.userid)
+  CONFIG['login_hook']('email', row)
   return flask.redirect(flask.url_for(CONFIG['login_home']))
 
 @APP.route('/wait')
