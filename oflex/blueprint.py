@@ -56,7 +56,7 @@ def get_verify():
     cur.execute('begin')
     cur.execute(CONFIG['queries']['get_verify'], (email,))
     row = cur.fetchone()
-    unk_details = flask.Response("Unknown verification details", status=404)
+    unk_details = flask.Response("Unknown verification details '%s' '%s'" % (email, verification_code), status=404)
     if not row:
       logging.debug('unk email %s', email)
       flask.abort(unk_details) # possible attack
