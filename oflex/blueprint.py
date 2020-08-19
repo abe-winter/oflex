@@ -1,4 +1,4 @@
-import flask, uuid, json, scrypt, os, random, binascii, logging
+import flask, uuid, json, scrypt, os, random, binascii, logging, urllib
 from datetime import datetime, timedelta
 from . import pool, middleware
 from .config import CONFIG, getenv
@@ -48,6 +48,9 @@ def get_wait():
 @APP.route('/verify')
 def get_verify():
   email = flask.request.args['email']
+  if os.environ.get('DOUBLE_DECODE'):
+    # yup, LB + lambda = double encoding. https://github.com/dougmoscrop/serverless-http/issues/74
+    email = urllib.parse.unquote(email)
   verification_code = flask.request.args['verification_code']
   if not email or not verification_code:
     flask.abort(flask.Response("Missing query params in link", status=400))
@@ -56,7 +59,7 @@ def get_verify():
     cur.execute('begin')
     cur.execute(CONFIG['queries']['get_verify'], (email,))
     row = cur.fetchone()
-    unk_details = flask.Response("Unknown verification details '%s' '%s'" % (email, verification_code), status=404)
+    unk_details = flask.Response("Unknown verification details", status=404)
     if not row:
       logging.debug('unk email %s', email)
       flask.abort(unk_details) # possible attack
