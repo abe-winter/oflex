@@ -39,6 +39,7 @@ def post_login_email():
     return flask.redirect(flask.url_for('oflex.blueprint.get_wait'))
   set_session(row.userid)
   CONFIG['login_hook']('email', row)
+  CONFIG['event_hook']('login_email', row.userid)
   return flask.redirect(flask.url_for(CONFIG['login_home']))
 
 @APP.route('/wait')
@@ -63,7 +64,7 @@ def get_verify():
     if not row:
       logging.debug('unk email %s', email)
       flask.abort(unk_details) # possible attack
-    actual_code, verified, pass_hash = row
+    actual_code, verified, pass_hash, userid = row
     if verified is not None and actual_code == verification_code:
       flask.abort(flask.Response("Already verified!", status=400))
     if verified is not None or actual_code != verification_code:
@@ -72,6 +73,7 @@ def get_verify():
     assert verified is None and actual_code == verification_code
     cur.execute('update users set verified = now() where email = %s', (email,))
     cur.execute('commit')
+  CONFIG['event_hook']('verify', userid)
   if pass_hash is None:
     # note: this is the pre-pass case; oflex can't generate this case, it requires an invite flow initiated by the app
     # todo: add an invite() function somewhere to do this
@@ -133,6 +135,7 @@ def post_join_email():
       )
       # note: only set_session in this !require_verification branch
       set_session(userid)
+  CONFIG['event_hook']('join_email', userid)
   if CONFIG['require_verification']:
     return flask.redirect(flask.url_for('oflex.blueprint.get_wait'))
   else:

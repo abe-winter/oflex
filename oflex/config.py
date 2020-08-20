@@ -54,6 +54,7 @@ RAW_CONFIG = dict(
   require_verification=False,
   send_verification_email=default_send_verify,
   login_hook=lambda kind, row: None,
+  event_hook=lambda kind, userid: None,
 )
 
 # note: this is a dict rather than None so import refs work
@@ -78,7 +79,7 @@ def render_config():
     create_user_email_ver=render.insert('users', ('userid', 'username', 'auth_method', 'email', 'pass_hash', 'pass_salt', 'verification_code')),
     create_user_sms=render.insert('users', ('userid', 'auth_method', 'sms')),
     update_username=render.update('users', 'username', 'userid'),
-    get_verify=render.select('users', ('verification_code', 'verified', 'pass_hash'), 'email'),
+    get_verify=render.select('users', ('verification_code', 'verified', 'pass_hash', 'userid'), 'email'),
     # note: get_* select queries are using namedtuple fields. so much ugly indirection here, just use an ORM
     get_user_email=render.select('users', tmp['query_fields']['get_user_email']._fields, 'email'),
     get_user_sms=render.select('users', tmp['query_fields']['get_user_sms']._fields, 'sms'),
