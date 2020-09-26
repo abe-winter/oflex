@@ -19,7 +19,7 @@ setup(
     'psycopg2-binary',
     'pyyaml',
     'redis',
-    'scrypt==0.8.13',
+    'scrypt==0.8.16',
   ],
   extras_require={
     'sms': ['twilio', 'phonenumbers'],
