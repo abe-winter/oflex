@@ -16,7 +16,7 @@ setup(
   keywords=['flask', 'pooling', 'login', 'auth'],
   install_requires=[
     'flask==1.*',
-    'psycopg2-binary==2.9.*',
+    'psycopg2-binary==2.*',
     'pyyaml==5.4.*',
     'redis==3.5.*',
     'scrypt==0.8.*',
