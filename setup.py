@@ -15,11 +15,11 @@ setup(
   packages=find_packages(include=['oflex', 'oflex.*']),
   keywords=['flask', 'pooling', 'login', 'auth'],
   install_requires=[
-    'flask',
-    'psycopg2-binary',
-    'pyyaml',
-    'redis',
-    'scrypt==0.8.16',
+    'flask==1.*',
+    'psycopg2-binary==2.9.*',
+    'pyyaml==5.4.*',
+    'redis==3.5.*',
+    'scrypt==0.8.*',
   ],
   extras_require={
     'sms': ['twilio', 'phonenumbers'],
