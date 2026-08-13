@@ -35,6 +35,7 @@ RAW_CONFIG = dict(
   use_redis=True,
   env=dict(
     # name of environment variable that holds postgres connection string
+    # wow this is horrible get rid of it
     automig_con='AUTOMIG_CON',
     redis='REDIS_HOST',
     twilio_sid='TWILIO_SID',

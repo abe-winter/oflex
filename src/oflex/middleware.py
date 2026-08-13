@@ -1,5 +1,5 @@
 import flask, functools
-from datetime import datetime
+from datetime import datetime, timezone
 
 def require_session_inner(wrapped, api_mode=False):
   "helper"
@@ -10,7 +10,7 @@ def require_session_inner(wrapped, api_mode=False):
     # todo: remember redirect page
     userid = flask.session.get('userid')
     # note: 'expires' here should never matter b/c cookie expires in 31 days, but this is signed and that isn't I think so I have this
-    if userid is None or 'expires' not in flask.session or flask.session['expires'] < datetime.now():
+    if userid is None or 'expires' not in flask.session or flask.session['expires'] < datetime.now(tz=timezone.utc):
       if api_mode:
         flask.abort(flask.Response("missing or expired session, sign in", status=401))
       else:
