@@ -1,4 +1,4 @@
-import flask, json, functools
+import flask, functools
 from datetime import datetime
 
 def require_session_inner(wrapped, api_mode=False):

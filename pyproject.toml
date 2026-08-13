@@ -35,3 +35,15 @@ minversion = "8.0"
 addopts = "-ra -q --import-mode=importlib"
 testpaths = ["test"]
 pythonpath = ["src"]
+
+[tool.ruff.lint]
+ignore = [
+    "I001",
+    "BLE001",
+    "C408",
+
+    # actually fix these eventually
+    "DTZ005",
+    "LOG015",
+    "UP031",
+]

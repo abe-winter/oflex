@@ -1,4 +1,4 @@
-import flask, uuid, json, scrypt, os, random, binascii, logging
+import flask, uuid, scrypt, os, random, binascii, logging
 from datetime import datetime, timedelta
 from . import pool, middleware
 from .config import CONFIG, getenv
@@ -153,7 +153,7 @@ def send_sms_code(number):
   import phonenumbers # delayed for soft dep
   try: number = phonenumbers.parse(number, 'US')
   except Exception as err:
-    flask.abort(flask.Response(f"Problem parsing phone number: {str(err)}", status=400))
+    flask.abort(flask.Response(f"Problem parsing phone number: {err!s}", status=400))
   if not phonenumbers.is_valid_number(number):
     flask.abort(flask.Response("Invalid number", status=400))
   if number.country_code != 1:

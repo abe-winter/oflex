@@ -63,11 +63,11 @@ CONFIG = {}
 def load_config(path='oflex.yml'):
   "load config from file"
   # todo: deep merge instead of update
-  RAW_CONFIG.update(yaml.load(open(path)))
+  with open(path) as f:
+    RAW_CONFIG.update(yaml.load(f))
 
 def render_config():
   "render queries"
-  global CONFIG
   tmp = RAW_CONFIG.copy() # this isn't a deep copy -- why am I bothering? what's RAW_CONFIG -> CONFIG about?
   assert tmp['db_dialect'] in ('postgres', 'sqlite')
   render = QueryRenderer(tmp['db_dialect'])
