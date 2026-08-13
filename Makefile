@@ -3,7 +3,7 @@ lint:
 
 .PHONY: test
 test:
-	uvx pytest
+	uv run pytest
 
 invite.png: invite-flow.dot
 	dot -T png $< -o$@
