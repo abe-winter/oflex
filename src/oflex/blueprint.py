@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from . import pool, middleware
 from .config import CONFIG, getenv
 
-APP = flask.Blueprint(__name__, 'oflex')
+APP = flask.Blueprint('oflex', __name__)
 
 @APP.route('/login')
 def get_login():
