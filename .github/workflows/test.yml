@@ -6,7 +6,11 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: actions/setup-python@v7
-    - run: uv self version
+      with:
+        python-version-file: pyproject.toml
+    - uses: astral-sh/setup-uv@v9
+      with:
+        version: "0.12.4"
     - name: lint
       run: make lint
     - name: test
