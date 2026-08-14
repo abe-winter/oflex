@@ -7,3 +7,6 @@ test:
 
 invite.png: invite-flow.dot
 	dot -T png $< -o$@
+
+pinact:
+	pinact run --exclude '^actions\/'
