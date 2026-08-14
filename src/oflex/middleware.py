@@ -15,7 +15,7 @@ def require_session_inner(wrapped, api_mode=False):
         flask.abort(flask.Response("missing or expired session, sign in", status=401))
       else:
         flask.flash('Session expired, sign in again')
-        return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+        return flask.redirect(flask.url_for('oflex.get_login'))
     flask.g.session = {'userid': userid}
     return wrapped(*args, **kwargs)
   return outer

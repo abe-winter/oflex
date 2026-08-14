@@ -28,15 +28,15 @@ def post_login_email():
     raw_row = cur.fetchone()
     if raw_row is None:
       flask.flash('Bad login info!')
-      return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+      return flask.redirect(flask.url_for('oflex.get_login'))
   row = CONFIG['query_fields']['get_user_email'](*raw_row)
   assert row.auth_method == 'email'
   if tobytes(row.pass_hash) != scrypt.hash(form['password'].encode(), tobytes(row.pass_salt)):
     flask.flash('Bad login info!')
-    return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+    return flask.redirect(flask.url_for('oflex.get_login'))
   if CONFIG['require_verification'] and not row.verified:
     flask.flash("That password is correct but your email hasn't been verified yet!")
-    return flask.redirect(flask.url_for('oflex.blueprint.get_wait'))
+    return flask.redirect(flask.url_for('oflex.get_wait'))
   set_session(row.userid)
   CONFIG['login_hook']('email', row)
   CONFIG['event_hook']('login_email', row.userid)
@@ -74,11 +74,11 @@ def get_verify():
   if pass_hash is None:
     # note: this is the pre-pass case; oflex can't generate this case, it requires an invite flow initiated by the app
     # todo: add an invite() function somewhere to do this
-    return flask.redirect(flask.url_for('oflex.blueprint.get_finish', email=email, verification_code=verification_code))
+    return flask.redirect(flask.url_for('oflex.get_finish', email=email, verification_code=verification_code))
   else:
     # note: has-pass case
     flask.flash('Verification successful! Now log in')
-    return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+    return flask.redirect(flask.url_for('oflex.get_login'))
 
 @APP.route('/finish')
 def get_finish():
@@ -98,7 +98,7 @@ def post_finish():
       flask.abort(flask.Response("Bad verification code; make sure you followed the invite link correctly. Ask your admin to send you another invitation maybe.", status=400))
     cur.execute('update users set pass_salt=%s, pass_hash=%s where userid=%s', (pass_salt, pass_hash, userid))
   flask.flash("Password set successfully! Now log in")
-  return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+  return flask.redirect(flask.url_for('oflex.get_login'))
 
 @APP.route('/join')
 def get_join():
@@ -134,14 +134,14 @@ def post_join_email():
       set_session(userid)
   CONFIG['event_hook']('join_email', userid)
   if CONFIG['require_verification']:
-    return flask.redirect(flask.url_for('oflex.blueprint.get_wait'))
+    return flask.redirect(flask.url_for('oflex.get_wait'))
   else:
     return flask.redirect(flask.url_for(CONFIG['login_home']))
 
 @APP.route('/logout', methods=['POST'])
 def post_logout():
   flask.session.clear()
-  return flask.redirect(flask.url_for('oflex.blueprint.get_login'))
+  return flask.redirect(flask.url_for('oflex.get_login'))
 
 @APP.route('/login/sms')
 def get_login_sms():
@@ -175,7 +175,7 @@ def send_sms_code(number):
 def post_login_sms():
   assert CONFIG['support_sms']
   send_sms_code(flask.request.form['sms'])
-  return flask.redirect(flask.url_for('oflex.blueprint.get_confirm'))
+  return flask.redirect(flask.url_for('oflex.get_confirm'))
 
 @APP.route('/login/sms/confirm')
 def get_confirm():
@@ -203,9 +203,9 @@ def post_confirm():
       userid = str(uuid.uuid4())
       cur.execute(CONFIG['queries']['create_user_sms'], (userid, 'sms', normal))
       row = cur.fetchone()
-      dest = flask.url_for('oflex.blueprint.username')
+      dest = flask.url_for('oflex.username')
     elif not row.username:
-      dest = flask.url_for('oflex.blueprint.username')
+      dest = flask.url_for('oflex.username')
     set_session(userid)
   flask.current_app.redis.delete(confirm_key)
   return flask.redirect(dest)

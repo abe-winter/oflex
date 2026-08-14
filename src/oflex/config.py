@@ -17,7 +17,7 @@ class QueryRenderer:
     return f"insert into {table} ({', '.join(cols)}) values ({', '.join([self.wildcard] * len(cols))})"
 
 def default_send_verify(email, verification_code):
-  print('verify', flask.url_for('oflex.blueprint.get_verify', email=email, verification_code=verification_code, _external=True))
+  print('verify', flask.url_for('oflex.get_verify', email=email, verification_code=verification_code, _external=True))
 
 RAW_CONFIG = dict(
   queries=None,
