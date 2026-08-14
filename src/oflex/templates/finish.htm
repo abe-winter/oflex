@@ -4,7 +4,7 @@
 <h2>Finish account</h2>
 <hr>
 <div class="alert alert-warning">You've verified your email. Now finish setting up your account by adding a password</div>
-<form method="post" action="{{url_for('oflex.blueprint.post_finish')}}">
+<form method="post" action="{{url_for('oflex.post_finish')}}">
   <input type="hidden" name="verification_code" value="{{verification_code}}">
   <label class="mt-3">
     Email

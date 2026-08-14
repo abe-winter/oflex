@@ -1,0 +1,49 @@
+[project]
+name = "oflex"
+version = "0.0.6"
+description = "Opinionated flask extensions for login & connection pooling"
+readme = "README.md"
+authors = [
+    { name = "Abe Winter", email = "awinter.public+oflex@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "flask>=3.1.3",
+    "psycopg2-binary>=2.9.12",
+    "pyyaml>=6.0.3",
+    "redis>=8.1.0",
+    "scrypt>=0.9.4",
+]
+
+[project.optional-dependencies]
+sms = [
+    "phonenumbers>=9.0.36",
+    "twilio>=9.11.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --import-mode=importlib"
+testpaths = ["test"]
+pythonpath = ["src"]
+
+[tool.ruff.lint]
+ignore = [
+    "I001",
+    "BLE001",
+    "C408",
+
+    # actually fix these eventually
+    "DTZ005",
+    "LOG015",
+    "UP031",
+]

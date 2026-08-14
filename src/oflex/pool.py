@@ -1,4 +1,4 @@
-import flask, contextlib, os, redis, jinja2, time, sqlite3
+import flask, contextlib, os, redis, jinja2, sqlite3
 from .config import render_config, CONFIG, getenv
 
 def fetch1_abort(cur, status=404):

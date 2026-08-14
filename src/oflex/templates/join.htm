@@ -3,7 +3,7 @@
 {% block container %}
 <h2>Create an account</h2>
 <hr>
-<form method="post" action="{{url_for('oflex.blueprint.post_join_email')}}">
+<form method="post" action="{{url_for('oflex.post_join_email')}}">
   <label class="mt-3">{{username_name}} {{username_comment}} <input type="text" class="form-control" placeholder="{{username_name.lower()}}" name="username" autofocus required></label>
   <br>
   <label class="mt-3">Email <input type="email" class="form-control" placeholder="email" name="email" required></label>
@@ -12,8 +12,8 @@
   <br>
   <button class="btn btn-primary mt-3">Create account</button>
 </form>
-<p class="lead mt-3">Or <a href="{{url_for('oflex.blueprint.get_login')}}">login with email</a></p>
+<p class="lead mt-3">Or <a href="{{url_for('oflex.get_login')}}">login with email</a></p>
 {% if support_sms %}
-  <p class="lead">Or <a href="{{url_for('oflex.blueprint.get_login_sms')}}">use SMS</a></p>
+  <p class="lead">Or <a href="{{url_for('oflex.get_login_sms')}}">use SMS</a></p>
 {% endif %}
 {% endblock container %}
